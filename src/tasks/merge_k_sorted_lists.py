@@ -1,4 +1,10 @@
-from py_tools.seq import isplit
+from typing import List
+
+try:
+    from py_tools.seq import isplit
+except ImportError:
+    def isplit(s, delimeter=None):
+        return s.split(delimeter)
 
 
 def insort(a: list, x, key=None):
@@ -23,10 +29,14 @@ def insort(a: list, x, key=None):
 
 
 class LinkedList:
-    def __init__(self):
+    def __init__(self, node=None):
         self.head = None
         self.tail = None
         self.len = 0
+        while node:
+            tmp = node.next
+            self.push_tail(node)
+            node = tmp
 
     def push_tail(self, v):
         if not isinstance(v, ListNode):
@@ -86,21 +96,32 @@ class LinkedList:
         return str(self)
 
 
-class ListNode:
-    def __init__(self, x):
-        self.val = x
-        self.next = None
-
-    def __iter__(self):
+if 'ListNode' in globals():
+    def _iter_f(self):
         curr = self
         while curr:
             yield curr.val
             curr = curr.next
 
 
+    ListNode.__iter__ = _iter_f
+else:
+    class ListNode:
+        def __init__(self, x):
+            self.val = x
+            self.next = None
+
+        def __iter__(self):
+            curr = self
+            while curr:
+                yield curr.val
+                curr = curr.next
+
+
 def merge(lists):
     r = LinkedList()
     key_f = lambda a: -a.head.val
+    lists = [l for l in lists if l.head]
     lists = sorted(lists, key=key_f)
     while lists:
         current_list = lists.pop()
@@ -110,9 +131,18 @@ def merge(lists):
     return r
 
 
+class Solution:
+    def mergeKLists(self, lists: List[ListNode]) -> ListNode:
+        return merge([LinkedList(x) for x in lists]).head
+
+
 if __name__ == '__main__':
-    print(merge([
+    print(LinkedList(Solution().mergeKLists([l.head for l in [
         LinkedList.from_string("1->4->5", type=int),
         LinkedList.from_string("2->6", type=int),
         LinkedList.from_string("1->3->4", type=int),
-    ]))
+    ]])))
+
+    print(LinkedList(Solution().mergeKLists([l.head for l in [
+        LinkedList()
+    ]])))
