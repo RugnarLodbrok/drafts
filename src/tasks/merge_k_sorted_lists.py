@@ -1,20 +1,23 @@
 from py_tools.seq import isplit
-import bisect
 
 
 def insort(a: list, x, key=None):
-    if not key:
-        key = lambda x: x
     i = 0
     j = len(a)
-    while True:
-        mid = (i + j) // 2
-        if key(x) >= key(a[mid]):
-            if i == mid:
-                break
-            i = mid
-        else:
-            j = mid
+    if key:
+        while i < j:
+            mid = (i + j) // 2
+            if key(x) <= key(a[mid]):
+                j = mid
+            else:
+                i = mid + 1
+    else:
+        while i < j:
+            mid = (i + j) // 2
+            if x <= a[mid]:
+                j = mid
+            else:
+                i = mid + 1
     a.insert(i, x)
     return i
 
@@ -32,8 +35,8 @@ class LinkedList:
             v.next = None
         if not self.tail:
             self.head = v
-            self.tail = v
-        self.tail.next = v
+        else:
+            self.tail.next = v
         self.tail = v
         self.len += 1
 
@@ -74,10 +77,13 @@ class LinkedList:
         return self.len
 
     def __bool__(self):
-        return self.len
+        return not not self.len
 
     def __str__(self):
-        return "->".join(str(x) for x in self.head)
+        return "->".join(str(x) for x in self.head or [])
+
+    def __repr__(self):
+        return str(self)
 
 
 class ListNode:
@@ -94,21 +100,19 @@ class ListNode:
 
 def merge(lists):
     r = LinkedList()
-    lists = sorted(lists, key=lambda a: a.head.val)
+    key_f = lambda a: -a.head.val
+    lists = sorted(lists, key=key_f)
     while lists:
-        r.push_tail(lists[0].pop_head())
-        if not lists[0]:
-            lists.pop(0)
-        else:
-            bisect.insort()
+        current_list = lists.pop()
+        r.push_tail(current_list.pop_head())
+        if current_list:
+            insort(lists, current_list, key=key_f)
+    return r
 
 
 if __name__ == '__main__':
-    # merge([
-    #     LinkedList.from_string("1->4->5"),
-    #     LinkedList.from_string("2->6"),
-    #     LinkedList.from_string("1->3->4"),
-    # ])
-    a = [1, 2, 3, 4, 5, 5, 5, 5, 6, 6, 7]
-    i = insort(a, 5)
-    print(a[:i], a[i], a[i + 1:])
+    print(merge([
+        LinkedList.from_string("1->4->5", type=int),
+        LinkedList.from_string("2->6", type=int),
+        LinkedList.from_string("1->3->4", type=int),
+    ]))
