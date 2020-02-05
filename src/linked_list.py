@@ -156,7 +156,9 @@ class LinkedList:
         return not not self.len
 
     def __str__(self):
-        return "->".join(str(x) for x in self.head or [])
+        if self.len:
+            return "->".join(str(x) for x in self.head)
+        else:
+            return "<Empty LL>"
 
-    def __repr__(self):
-        return str(self)
+    __repr__ = __str__
