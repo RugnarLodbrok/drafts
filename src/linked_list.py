@@ -24,6 +24,7 @@ else:
             while curr:
                 yield curr.val
                 curr = curr.next
+
         def __repr__(self):
             if self.next:
                 return f"[{self.val}]->[{self.next.val}]->..."
@@ -45,7 +46,9 @@ class LinkedList:
             for x in node:
                 self.push_tail(x)
 
-    def reverse(self):
+    def reverse(self, node_before=None, n=None):
+        if node_before or (n is not None):
+            return self._reverse_chunk(node_before, n)
         self.tail = self.head
         a = self.head
         c = None
@@ -55,6 +58,31 @@ class LinkedList:
             a = c.next
             c.next = b
         self.head = c
+
+    def _reverse_chunk(self, node_before, n):
+        if n is None:
+            n = len(self)
+        if node_before:
+            first_node = node_before.next
+        else:
+            first_node = self.head
+        a = first_node
+        c = None
+        while a:
+            if not n:  # chunk ended
+                first_node.next = a
+                break
+            b = c
+            c = a
+            a = c.next
+            c.next = b
+            n -= 1
+        else:  # list ended
+            self.tail = first_node
+        if node_before:
+            node_before.next = c
+        else:
+            self.head = c
 
     def push_tail(self, v):
         if not isinstance(v, ListNode):

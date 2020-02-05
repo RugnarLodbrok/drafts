@@ -34,36 +34,7 @@ def reverse_n_repeat(ll: LinkedList, n):
          sn
     """
 
-    def reverse_chunk(node_before, n):
-        if node_before:
-            first_node = node_before.next
-        else:
-            first_node = ll.head
-        a = first_node
-        c = None
-        while a:
-            if not n:
-                break
-            b = c
-            c = a
-            a = c.next
-            c.next = b
-            n -= 1
-        else:  # list ended
-            if node_before:
-                node_before.next = c
-            else:
-                ll.head = c
-            ll.tail = first_node
-        # chunk ended
-        if node_before:
-            node_before.next = c
-        else:
-            ll.head = c
-        first_node.next = a
-
-
-    reverse_chunk(ll.head.next.next.next.next.next, 3)
+    ll.reverse(ll.head.next.next.next.next.next, 3)
     # remaining_size = len(ll)
     # node = ll.head
     # while remaining_size >= n:
