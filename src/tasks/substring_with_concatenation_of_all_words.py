@@ -37,13 +37,13 @@ def find_substring(s: str, words: List[str]) -> List[int]:
     for w in words:
         ww[w] += 1
 
-    def recur(i, cnt):
+    def recur(i, cnt):  # pass i instead of cut string to avoid copying memory
         if not cnt:
             return True
         for w, c in ww.items():
             if not c:
                 continue
-            if s[i:].startswith(w):
+            if s[i:].startswith(w):  # still we copy here :(
                 ww[w] -= 1
                 if recur(i + len(w), cnt - 1):
                     ww[w] += 1
@@ -51,11 +51,10 @@ def find_substring(s: str, words: List[str]) -> List[int]:
                 ww[w] += 1
         return False
 
-    cnt = len(words)
     for i, c in enumerate(s):
         if total_w_len + i > len(s):
             break
-        if recur(i, cnt):
+        if recur(i, len(words)):
             ret.append(i)
     return ret
 
