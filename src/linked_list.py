@@ -27,13 +27,21 @@ else:
 
         def __repr__(self):
             if self.next:
-                return f"[{self.val}]->[{self.next.val}]->..."
+                if self.next.next:
+                    return f"[{self.val}]->[{self.next.val}]->..."
+                else:
+                    return f"[{self.val}]->[{self.next.val}]"
             else:
                 return f"[{self.val}]"
 
 
 class LinkedList:
     def __init__(self, node=None):
+        """
+        if head/tail or nodes altered directly or bypassing LinkedList methods head/tail state
+        could become inconsistent. Therefore behaviour is undefined
+        :param node: vanilla list or ListNode
+        """
         self.head = None
         self.tail = None
         self.len = 0
@@ -47,6 +55,13 @@ class LinkedList:
                 self.push_tail(x)
 
     def reverse(self, node_before=None, n=None):
+        """
+        reverse linked list in one pass;
+        :param node_before: a node before the chunk to be reversed. Has role of a pointer to the chunk
+               When node_before is None; list reversed from the head;
+        :param n: number of nodes to be reversed
+        :return:
+        """
         if node_before or (n is not None):
             return self._reverse_chunk(node_before, n)
         self.tail = self.head
@@ -60,6 +75,11 @@ class LinkedList:
         self.head = c
 
     def _reverse_chunk(self, node_before, n):
+        """
+        :param node_before: a node before the chunk to be reversed. Has role of a pointer to the chunk
+        :param n: number of nodes to be reversed
+        :return:
+        """
         if n is None:
             n = len(self)
         if node_before:
