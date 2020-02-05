@@ -24,31 +24,44 @@ Input:
 Output: []
 
 """
-
+from collections import defaultdict
 from typing import List
 
 
 def find_substring(s: str, words: List[str]) -> List[int]:
-    def recur(i, words):
-        if not words:
+    ret = []
+    if not words:
+        return ret
+    ww = defaultdict(int)
+    for w in words:
+        ww[w] += 1
+
+    def recur(i, cnt):
+        if not cnt:
             return True
-        for j, w in enumerate(words):
+        for w, c in ww.items():
+            if not c:
+                continue
             if s[i:].startswith(w):
-                words2 = words[:]
-                words2.pop(j)
-                if recur(i + len(w), words2):
+                ww[w] -= 1
+                if recur(i + len(w), cnt - 1):
+                    ww[w] += 1
                     return True
+                ww[w] += 1
         return False
 
-    ret = []
+    cnt = len(words)
     for i, c in enumerate(s):
-        if recur(i, words):
+        if recur(i, cnt):
             ret.append(i)
     return ret
 
 
 def main():
     print(find_substring(s="barfoothebarfoobarman", words=["foo", "bar"]))
+    print(find_substring(s="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", words=["a", "a", "a", "a", "a", "a", "a", "a"]))
+    print(find_substring(s="barfoothebarfoobarman", words=[]))
+    print(find_substring("wordgoodgoodgoodbestword", ["word", "good", "best", "word"]))
 
 
 if __name__ == '__main__':
