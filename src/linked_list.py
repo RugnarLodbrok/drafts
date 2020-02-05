@@ -24,6 +24,11 @@ else:
             while curr:
                 yield curr.val
                 curr = curr.next
+        def __repr__(self):
+            if self.next:
+                return f"[{self.val}]->[{self.next.val}]->..."
+            else:
+                return f"[{self.val}]"
 
 
 class LinkedList:
@@ -39,6 +44,17 @@ class LinkedList:
         elif isinstance(node, list):
             for x in node:
                 self.push_tail(x)
+
+    def reverse(self):
+        self.tail = self.head
+        a = self.head
+        c = None
+        while a:
+            b = c
+            c = a
+            a = c.next
+            c.next = b
+        self.head = c
 
     def push_tail(self, v):
         if not isinstance(v, ListNode):
