@@ -149,6 +149,12 @@ class LinkedList:
             r.push_tail(v)
         return r
 
+    def __iter__(self):
+        node = self.head
+        while node:
+            yield node
+            node = node.next
+
     def __len__(self):
         return self.len
 
@@ -157,7 +163,20 @@ class LinkedList:
 
     def __str__(self):
         if self.len:
-            return "->".join(str(x) for x in self.head)
+            def iter_for_str():
+                seen = set()
+                for i, node in enumerate(self):
+                    if i > 256:
+                        yield '...'
+                    else:
+                        if node not in seen:
+                            yield f"[{str(node.val)}]"
+                            seen.add(node)
+                        else:
+                            yield f"(loop)[{str(node.val)}]"
+                            return
+
+            return "->".join(iter_for_str())
         else:
             return "<Empty LL>"
 
