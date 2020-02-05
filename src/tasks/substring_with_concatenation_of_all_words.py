@@ -32,6 +32,7 @@ def find_substring(s: str, words: List[str]) -> List[int]:
     ret = []
     if not words:
         return ret
+    total_w_len = sum(map(len, words))
     ww = defaultdict(int)
     for w in words:
         ww[w] += 1
@@ -52,12 +53,20 @@ def find_substring(s: str, words: List[str]) -> List[int]:
 
     cnt = len(words)
     for i, c in enumerate(s):
+        if total_w_len + i > len(s):
+            break
         if recur(i, cnt):
             ret.append(i)
     return ret
 
 
 def find_substring_non_recur(s: str, words: List[str]) -> List[int]:
+    """
+    When len(words) > python stack size
+    :param s:
+    :param words:
+    :return:
+    """
     ret = []
     if not words:
         return ret
@@ -65,11 +74,16 @@ def find_substring_non_recur(s: str, words: List[str]) -> List[int]:
     for w in words:
         ww[w] += 1
     ww = [dict(word=w, count=c) for w, c in ww.items()]
+    total_w_len = sum(map(len, words))
 
     def non_recur(i, cnt):
         stack = [{"i": i}]  # (j)
+        ans = False
+        while stack:
+            if len(stack) > cnt:
+                ans = True
+            state = stack[-1]
 
-        def iteration(state):
             state.setdefault('j', 0)
             state.setdefault('recur', False)
             if state['recur']:
@@ -83,25 +97,17 @@ def find_substring_non_recur(s: str, words: List[str]) -> List[int]:
                 if s[state['i']:].startswith(w['word']):
                     w['count'] -= 1
                     state['recur'] = True
-                    return dict(i=state['i'] + len(w['word']))
+                    stack.append(dict(i=state['i'] + len(w['word'])))
+                    break
                 state['j'] += 1
-            else:
-                return False
-
-        ans = False
-        while stack:
-            if len(stack) > cnt:
-                ans = True
-            state = stack[-1]
-            new_state = iteration(state)
-            if new_state:
-                stack.append(new_state)
             else:
                 stack.pop(-1)
         return ans
 
     cnt = len(words)
     for i, c in enumerate(s):
+        if total_w_len + i > len(s):
+            break
         if non_recur(i, cnt):
             ret.append(i)
     return ret
@@ -112,8 +118,8 @@ def main():
     print(find_substring_non_recur(s="a" * 36, words=["a"] * 8))
     print(find_substring_non_recur(s="barfoothebarfoobarman", words=[]))
     print(find_substring_non_recur("wordgoodgoodgoodbestword", ["word", "good", "best", "word"]))
-    print(find_substring_non_recur("a" * 1000, ["a"] * 1001))
-    # print(find_substring_non_recur("a" * 5000, ["a"] * 5001))
+    print(find_substring_non_recur("a" * 100, ["a"] * 101))
+    print(find_substring_non_recur("a" * 5000, ["a"] * 5001))
 
 
 if __name__ == '__main__':
