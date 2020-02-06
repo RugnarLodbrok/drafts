@@ -1,7 +1,6 @@
 """
 https://www.cs.mcgill.ca/~aassaf9/python/algorithm_x.html
 """
-from collections import defaultdict
 
 
 def dancing_lynx(X, Y):
@@ -45,13 +44,17 @@ def dancing_lynx(X, Y):
 
 
 if __name__ == '__main__':
-    X = {1, 2, 3, 4, 5, 6, 7}
-    Y = {
-        'A': [1, 4, 7],
-        'B': [1, 4],
-        'C': [4, 5, 7],
-        'D': [3, 5, 6],
-        'E': [2, 3, 6, 7],
-        'F': [2, 7]}
+
+    Y = {'A': [1, 4, 7],
+         'B': [1, 4],
+         'C': [4, 5, 7],
+         'D': [3, 5, 6],
+         'E': [2, 3, 6, 7],
+         'F': [2, 7]}
+    #    X = {1, 2, 3, 4, 5, 6, 7}
+    X = set()
+    for piece, slots in Y.items():
+        X.update(slots)
+
     for s in dancing_lynx(X, Y):
         print(s)
