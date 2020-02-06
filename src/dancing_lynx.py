@@ -1,20 +1,25 @@
 """
+basic implementation source:
 https://www.cs.mcgill.ca/~aassaf9/python/algorithm_x.html
+
+understanding primary ans secondary constrains:
+http://www.nohuddleoffense.de/2019/01/20/dancing-links-algorithm-x-and-the-n-queens-puzzle/
 """
+
 from py_tools.seq import first, rest
 
 
 def dancing_lynx(pieces: dict, primary: set = None):
     """
     Algorithm X of Donald Knuth
-    example input:
 
-    Y = {'A': [1, 4, 7],
-         'B': [1, 4],
-         'C': [4, 5, 7],
-         'D': [3, 5, 6],
-         'E': [2, 3, 6, 7],
-         'F': [2, 7]}
+    example input:
+    {'A': [1, 4, 7],
+     'B': [1, 4],
+     'C': [4, 5, 7],
+     'D': [3, 5, 6],
+     'E': [2, 3, 6, 7],
+     'F': [2, 7]}
 
     `slots` are `constrains` for short
     :param pieces: dict {piece: [slots]}; dict of pieces and its constrains
