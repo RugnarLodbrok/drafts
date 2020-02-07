@@ -33,6 +33,10 @@ from src.dancing_lynx import dancing_lynx
 
 
 def queens(n):
+    if n == 1:
+        yield (0, 0),
+    if n <= 1:
+        return
     n_slots = 6 * (n - 1)
 
     pieces = {}
@@ -55,6 +59,22 @@ def queens(n):
     yield from dancing_lynx(pieces, primary=set(range(2 * n)))
 
 
+def solution(n):
+    ret = []
+
+    for s in queens(n):
+        r = [["."] * n for _ in range(n)]
+        for i, j in s:
+            r[i][j] = 'Q'
+
+        ret.append(["".join(x) for x in r])
+    return ret
+
+
 if __name__ == '__main__':
-    for i, s in enumerate(queens(8)):
-        print(i, s)
+    for s in solution(1):
+        for r in s:
+            print(r)
+        print("")
+    # for i, s in enumerate(queens(8)):
+    #     print(i, s)
