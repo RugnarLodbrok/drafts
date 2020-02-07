@@ -83,10 +83,10 @@ def queens(n):
                 constrains[4 * n - 3 + d] = 1  # r-diag
             pieces[(i, j)] = constrains
 
-    for piece, constrains in pieces.items():
-        print(piece, constrains)
-        if piece[1] == n - 1:
-            print("")
+    # for piece, constrains in pieces.items():
+    #     print(piece, constrains)
+    #     if piece[1] == n - 1:
+    #         print("")
     # convert masks to values
     pieces = {piece: [i for i, v in enumerate(slots_mask) if v] for piece, slots_mask in pieces.items()}
     yield from dancing_lynx(pieces, primary=set(range(2 * n)))

@@ -32,20 +32,15 @@ def dancing_lynx(pieces: dict, primary: set = None):
         result = None
         shortest = MAX_INT
         for slot, pieces in X.items():
-            if primary is not None and slot not in primary:
+            if slot not in primary:
                 continue
             if len(pieces) < shortest:
                 result = slot
                 shortest = len(pieces)
         return result
 
-    def is_done():
-        if primary is None:
-            return not X
-        return not (set(X).intersection(primary))  # todo: improve here
-
     def recur():
-        if is_done():
+        if not primary_mut:
             yield solution[:]
         else:
             c = shortest_slot()
@@ -64,10 +59,14 @@ def dancing_lynx(pieces: dict, primary: set = None):
                     if s != slot:
                         X[s].remove(p)
             cols.append(X.pop(slot))
+            if slot in primary:
+                primary_mut.remove(slot)
         return cols
 
     def deselect(piece, cols):
         for slot in reversed(Y[piece]):
+            if slot in primary:
+                primary_mut.add(slot)
             X[slot] = cols.pop()
             for p in X[slot]:
                 for s in Y[p]:
@@ -84,6 +83,7 @@ def dancing_lynx(pieces: dict, primary: set = None):
         for slot in slots:
             if slot in X:
                 X[slot].add(piece)
+    primary_mut = set(primary or X)
     yield from recur()
 
 
