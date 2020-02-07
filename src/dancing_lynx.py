@@ -42,7 +42,7 @@ def dancing_lynx(pieces: dict, primary: set = None):
     def is_done():
         if primary is None:
             return not X
-        return not (set(X).intersection(primary))
+        return not (set(X).intersection(primary))  # todo: improve here
 
     def recur():
         if is_done():
@@ -97,5 +97,5 @@ if __name__ == '__main__':
         'E': [2, 3, 6, 7],
         'F': [2, 7],
     }
-    for s in dancing_lynx(pieces, primary=set(range(7))):
+    for s in dancing_lynx(pieces, primary=set(range(1, 8))):
         print(s)
