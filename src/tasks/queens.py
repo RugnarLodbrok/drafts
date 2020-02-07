@@ -93,5 +93,5 @@ def queens(n):
 
 
 if __name__ == '__main__':
-    for s in queens(4):
-        print(s)
+    for i, s in enumerate(queens(8)):
+        print(i, s)

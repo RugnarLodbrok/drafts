@@ -6,7 +6,7 @@ understanding primary ans secondary constrains:
 http://www.nohuddleoffense.de/2019/01/20/dancing-links-algorithm-x-and-the-n-queens-puzzle/
 """
 
-from py_tools.seq import first, rest
+MAX_INT = 2147483647
 
 
 def dancing_lynx(pieces: dict, primary: set = None):
@@ -29,14 +29,14 @@ def dancing_lynx(pieces: dict, primary: set = None):
     """
 
     def shortest_slot():
-        result = first(X)  # todo what if first is not primary?
-        shortest = len(X[result])
-        for slot in rest(X):
+        result = None
+        shortest = MAX_INT
+        for slot, pieces in X.items():
             if primary is not None and slot not in primary:
                 continue
-            if len(X[slot]) < shortest:
+            if len(pieces) < shortest:
                 result = slot
-                shortest = len(X[result])
+                shortest = len(pieces)
         return result
 
     def is_done():
