@@ -57,20 +57,16 @@ def sudoku(data):  # 27ms
 
 def sudoku_dancing_links(data):  # 3ms
     N = 9
-    X = ([("rc", rc) for rc in product(range(N), range(N))] +  # row and column
-         [("rn", rn) for rn in product(range(N), range(1, N + 1))] +  # row and number
-         [("cn", cn) for cn in product(range(N), range(1, N + 1))] +  # column and number
-         [("bn", bn) for bn in product(range(N), range(1, N + 1))])  # box and number
     Y = dict()
     for r, c, n in product(range(N), range(N), range(1, N + 1)):
         b = (r // 3) * 3 + (c // 3)  # Box number
         Y[(r, c, n)] = [
-            ("rc", (r, c)),
-            ("rn", (r, n)),
-            ("cn", (c, n)),
-            ("bn", (b, n))]
+            ("rc", (r, c)),  # row and column
+            ("rn", (r, n)),  # row and number
+            ("cn", (c, n)),  # column and number
+            ("bn", (b, n))]  # box and number
     dl = DancingLynx(Y)
-    for i, j in product(range(9), range(9)):
+    for i, j in product(range(N), range(N)):
         if data[i][j]:
             dl.cover((i, j, data[i][j]))
     for solution in dl.solve():
