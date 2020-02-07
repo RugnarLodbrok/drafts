@@ -33,15 +33,65 @@ Then the query at [1, 1] returns 1 because the cell is lit.  After this query, t
 1 1 1 1 1
 Before performing the second query we have only the lamp [4,4] on.  Now the query at [1,0] returns 0, because the cell is no longer lit.
 
-
 Note:
-
-1 <= N <= 10^9
-0 <= lamps.length <= 20000
-0 <= queries.length <= 20000
-lamps[i].length == queries[i].length == 2
+    1. 1 <= N <= 10^9
+    2. 0 <= lamps.length <= 20000
+    3. 0 <= queries.length <= 20000
+    4. lamps[i].length == queries[i].length == 2
 
 """
+from collections import defaultdict
+
+
+def grid_illumination(N, lamps, queries):
+    lamps_x = defaultdict(set)
+    lamps_y = defaultdict(int)
+    lamps_r = defaultdict(int)
+    lamps_l = defaultdict(int)
+    for x, y in lamps:
+        lamps_x[x].add((x, y))
+        lamps_y[y] += 1
+        lamps_r[x - y] += 1
+        lamps_l[x + y] += 1
+
+    def check_illumination(x, y):
+        return int(not not (lamps_x[x] or lamps_y[y] or lamps_l[x + y] or lamps_r[x - y]))
+
+    def remove_lamp(i, j):
+        if i == 0:
+            x_min = 0
+        else:
+            x_min = i - 1
+        if i == N:
+            x_max = N
+        else:
+            x_max = i + 1
+
+        if j == 0:
+            y_min = 0
+        else:
+            y_min = j - 1
+        if j == N:
+            y_max = N
+        else:
+            y_max = j + 1
+
+        for x in range(x_min, x_max + 1):
+            for y in range(y_min, y_max + 1):
+                lamp = (x, y)
+                if lamp in lamps_x[x]:
+                    lamps_x[x].remove(lamp)
+                    lamps_y[y] -= 1
+                    lamps_r[x - y] -= 1
+                    lamps_l[x + y] -= 1
+
+    ret = []
+    for q in queries:
+        ret.append(check_illumination(*q))
+        remove_lamp(*q)
+
+    return ret
+
 
 if __name__ == '__main__':
-    pass
+    print(grid_illumination(5, [[0, 0], [4, 4]], [[1, 1], [1, 0]]))
