@@ -35,22 +35,21 @@ def sudoku(data):
                     values.discard(data[m][n])
         return values
 
-    def recur():
-        # todo: start iteration from where prev recur stopped
-        for i in range(9):
-            for j in range(9):
+    def recur(start_i, start_j):
+        for i in range(start_i, 9):
+            for j in range(start_j if i == start_i else 0, 9):
                 if data[i][j]:
                     continue
                 possible_vals = get_possible_v(i, j)
                 for v in possible_vals:
                     data[i][j] = v
-                    if recur():
+                    if recur(i, j):
                         return True
                     data[i][j] = 0
                 return False
         return True
 
-    recur()
+    recur(0, 0)
 
 
 if __name__ == '__main__':
