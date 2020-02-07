@@ -70,13 +70,9 @@ def sudoku_dancing_links(data):  # 3ms
             ("cn", (c, n)),
             ("bn", (b, n))]
     dl = DancingLynx(Y)
-    for x in X:
-        if x not in dl.X:
-            dl.X[x] = set()
-    for i in range(9):
-        for j in range(9):
-            if data[i][j]:
-                dl.cover((i, j, data[i][j]))
+    for i, j in product(range(9), range(9)):
+        if data[i][j]:
+            dl.cover((i, j, data[i][j]))
     for solution in dl.solve():
         for i, j, v in solution:
             data[i][j] = v
