@@ -17,9 +17,12 @@ You may assume that the given Sudoku puzzle will have a single unique solution.
 The given board size is always 9x9.
 
 """
+from itertools import product
+
+from src.dancing_lynx import DancingLynx
 
 
-def sudoku(data):
+def sudoku(data):  # 27ms
     def get_possible_v(i, j):
         values = set(range(1, 10))
         for k in range(9):
@@ -52,6 +55,34 @@ def sudoku(data):
     recur(0, 0)
 
 
+def sudoku_dancing_links(data):  # 3ms
+    N = 9
+    X = ([("rc", rc) for rc in product(range(N), range(N))] +  # row and column
+         [("rn", rn) for rn in product(range(N), range(1, N + 1))] +  # row and number
+         [("cn", cn) for cn in product(range(N), range(1, N + 1))] +  # column and number
+         [("bn", bn) for bn in product(range(N), range(1, N + 1))])  # box and number
+    Y = dict()
+    for r, c, n in product(range(N), range(N), range(1, N + 1)):
+        b = (r // 3) * 3 + (c // 3)  # Box number
+        Y[(r, c, n)] = [
+            ("rc", (r, c)),
+            ("rn", (r, n)),
+            ("cn", (c, n)),
+            ("bn", (b, n))]
+    dl = DancingLynx(Y)
+    for x in X:
+        if x not in dl.X:
+            dl.X[x] = set()
+    for i in range(9):
+        for j in range(9):
+            if data[i][j]:
+                dl.cover((i, j, data[i][j]))
+    for solution in dl.solve():
+        for i, j, v in solution:
+            data[i][j] = v
+        return
+
+
 if __name__ == '__main__':
     data = [
         [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -64,6 +95,7 @@ if __name__ == '__main__':
         [0, 0, 0, 4, 1, 9, 0, 0, 5],
         [0, 0, 0, 0, 8, 0, 0, 7, 9],
     ]
-    sudoku(data)
+    # sudoku(data)
+    sudoku_dancing_links(data)
     for l in data:
         print(' '.join(map(str, l)))

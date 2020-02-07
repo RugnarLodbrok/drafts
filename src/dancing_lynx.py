@@ -95,65 +95,7 @@ def dancing_lynx(pieces: dict, primary: set = None):
                     all slots by default
     :return: list of solutions; solution is list of pieces
     """
-
-    def shortest_slot():
-        result = None
-        shortest = MAX_INT
-        for slot, pieces in X.items():
-            if slot not in primary:
-                continue
-            if len(pieces) < shortest:
-                result = slot
-                shortest = len(pieces)
-        return result
-
-    def recur():
-        if not primary_mut:
-            yield solution[:]
-        else:
-            c = shortest_slot()
-            for piece in list(X[c]):
-                solution.append(piece)
-                cols = cover(piece)
-                yield from recur()
-                uncover(piece, cols)
-                solution.pop()
-            pass
-
-    def cover(piece):
-        cols = []
-        for slot in Y[piece]:
-            for p in X[slot]:
-                for s in Y[p]:
-                    if s != slot:
-                        X[s].remove(p)
-            cols.append(X.pop(slot))
-            if slot in primary:
-                primary_mut.remove(slot)
-        return cols
-
-    def uncover(piece, cols):
-        for slot in reversed(Y[piece]):
-            if slot in primary:
-                primary_mut.add(slot)
-            X[slot] = cols.pop()
-            for p in X[slot]:
-                for s in Y[p]:
-                    if s != slot:
-                        X[s].add(p)
-
-    solution = []
-    Y = pieces
-    all_slots = set()
-    for piece, slots in Y.items():
-        all_slots.update(slots)
-    X = {slot: set() for slot in all_slots}
-    for piece, slots in Y.items():
-        for slot in slots:
-            X[slot].add(piece)
-    primary = primary or set(X)
-    primary_mut = set(primary)
-    yield from recur()
+    return DancingLynx(pieces, primary).solve()
 
 
 if __name__ == '__main__':
