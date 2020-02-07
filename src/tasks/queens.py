@@ -32,38 +32,6 @@ add_to_pythonpath(__file__, 2)
 from src.dancing_lynx import dancing_lynx
 
 
-def queens_4(n):
-    assert n == 4, "not implemented"
-    Y = {  # _   x-coord     y-coord     diag           r-diag
-        (0, 0): [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        (0, 1): [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        (0, 2): [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-        (0, 3): [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-
-        (1, 0): [0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        (1, 1): [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
-        (1, 2): [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
-        (1, 3): [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-
-        (2, 0): [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-        (2, 1): [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-        (2, 2): [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-        (2, 3): [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-
-        (3, 0): [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        (3, 1): [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-        (3, 2): [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-        (3, 3): [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    }
-    Y = {piece: [i for i, v in enumerate(slots_mask) if v] for piece, slots_mask in Y.items()}
-    X = set(range(7))
-    print("x, y:")
-    print(X)
-    print(Y)
-    print("solutions:")
-    yield from dancing_lynx(Y, primary=set(range(7)))
-
-
 def queens(n):
     n_slots = 6 * (n - 1)
 
@@ -83,11 +51,6 @@ def queens(n):
                 constrains[4 * n - 3 + d] = 1  # r-diag
             pieces[(i, j)] = constrains
 
-    # for piece, constrains in pieces.items():
-    #     print(piece, constrains)
-    #     if piece[1] == n - 1:
-    #         print("")
-    # convert masks to values
     pieces = {piece: [i for i, v in enumerate(slots_mask) if v] for piece, slots_mask in pieces.items()}
     yield from dancing_lynx(pieces, primary=set(range(2 * n)))
 
