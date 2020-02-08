@@ -27,5 +27,7 @@ exection -> execution (insert 'u')
 
 """
 
+from py_tools.alg import levenshtein_distance
+
 if __name__ == '__main__':
-    pass
+    print(levenshtein_distance("abcdefgh", "habcdefg"))
