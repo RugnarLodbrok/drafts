@@ -18,5 +18,30 @@ Note:
 You can assume that you can always reach the last index.
 """
 
+
+def jump_game2(data):
+    reach = 0
+    reach_next = 0
+    steps = 0
+    for i, j in enumerate(data):
+        if i > reach:
+            steps += 1
+            reach = reach_next
+            reach_next = i
+        reach_next = max(reach_next, i + j)
+    return steps
+
+
 if __name__ == '__main__':
-    pass
+    for ex in (
+            [],
+            [1],
+            [1, 1],
+            [2, 1],
+            [2, 1, 1],
+            [1, 2, 1],
+            [2, 3, 1, 1, 4],
+            [1, 1, 2, 1, 1, 1],
+            [1, 5, 4, 5, 1, 2, 1, 2, 1],
+    ):
+        print(ex, jump_game2(ex))
