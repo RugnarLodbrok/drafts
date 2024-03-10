@@ -3,3 +3,5 @@
 __pycache__
 *.pyc
 .alias-ci-ignore-branch
+.env
+src/steam_api/cache/
