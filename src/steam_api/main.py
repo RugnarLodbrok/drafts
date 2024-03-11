@@ -14,7 +14,7 @@ def main():
 
         if game.app_id in client.get_reviews.cache.cache:
             continue
-        for i, r in enumerate(client.get_reviews(game.app_id)):
+        for i, r in enumerate(client.get_reviews(game.app_id), start=1):
             if not (i % 10):
                 print(f'\r{i}/{total_reviews}', end='')
         print('')
