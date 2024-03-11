@@ -1,11 +1,9 @@
 import abc
 from collections import defaultdict
-
-import yaml
 from pathlib import Path
 from typing import Callable, TypeVar, Any
 
-from py_tools.dicts import defaultdict2
+import yaml
 from pydantic import BaseModel
 
 T = TypeVar('T', bound=BaseModel)
@@ -26,14 +24,18 @@ class _CachedFuncBase:
     def key_file(self, key: str) -> Path:
         return self.path / f'{key}.yml'
 
+    def _ensure_loaded(self, key: str) -> None:
+        if key not in self.data:
+            self._load(key)
+
+    def _load(self, key: str) -> None:
+        self.data[key] = yaml.load(self.key_file(key).read_text(), yaml.SafeLoader)
+
     def _check(self, key):
         if key in self.data:
             return True
 
-        if self.key_file(key).exists():
-            self.data[key] = yaml.load(self.key_file(key).read_text(), yaml.SafeLoader)
-            return True
-        return False
+        return self.key_file(key).exists()
 
     @abc.abstractmethod
     def _set(self, key: str, value: Any):
@@ -44,6 +46,7 @@ class _CachedFunc(_CachedFuncBase):
     def __call__(self, func: C) -> C:
         def wrapper(slf, key: str) -> T | None:
             if self._check(key):
+                self._ensure_loaded(key)
                 result = self.data[key]
                 return result and self.model.parse_obj(result)
             else:
@@ -51,6 +54,7 @@ class _CachedFunc(_CachedFuncBase):
                 self._set(key, result)
                 return result
 
+        wrapper.cache = self
         return wrapper
 
     def _set(self, key: str, value: BaseModel | None):
@@ -63,6 +67,7 @@ class _CachedGenerator(_CachedFuncBase):
     def __call__(self, func: C) -> C:
         def wrapper(slf, key: str) -> T | None:
             if self._check(key):
+                self._ensure_loaded(key)
                 for item in self.data[key]:
                     yield self.model.parse_obj(item)
             else:
@@ -75,6 +80,7 @@ class _CachedGenerator(_CachedFuncBase):
                     self._set(key, result)
                 return result
 
+        wrapper.cache = self
         return wrapper
 
     def _set(self, key: str, value: list[BaseModel]):

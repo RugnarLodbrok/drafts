@@ -105,7 +105,7 @@ class ReviewAuthor(BaseModel):
     num_reviews: int
     playtime_forever: int
     playtime_last_two_weeks: int
-    playtime_at_review: int
+    playtime_at_review: int | None = None
     last_played: int
 
 
