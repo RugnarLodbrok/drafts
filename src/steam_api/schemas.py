@@ -90,6 +90,51 @@ class App(BaseModel):
     content_descriptors: dict
 
 
+class ReviewsSummary(BaseModel):
+    num_reviews: int
+    review_score: int | None = None
+    review_score_desc: str | None = None
+    total_positive: int | None = None
+    total_negative: int | None = None
+    total_reviews: int | None = None
+
+
+class ReviewAuthor(BaseModel):
+    id: int = Field(..., alias='steamid')
+    num_games_owned: int
+    num_reviews: int
+    playtime_forever: int
+    playtime_last_two_weeks: int
+    playtime_at_review: int
+    last_played: int
+
+
+class Review(BaseModel):
+    id: int = Field(..., alias='recommendationid')
+    author: ReviewAuthor
+    language: str
+    review: str
+    timestamp_created: int
+    timestamp_updated: int
+    voted_up: bool
+    votes_up: int
+    votes_funny: int
+    weighted_vote_score: float
+    comment_count: int
+    steam_purchase: bool
+    recieved_for_free: bool | None = None
+    written_during_early_access: bool
+    hidden_in_steam_china: bool
+    steam_china_location: str
+
+
+class ReviewsResponse(BaseModel):
+    success: bool
+    query_summary: ReviewsSummary
+    reviews: list[Review]
+    cursor: str
+
+
 class AppInfoOuter(BaseModel):
     success: bool
     data: App | None = None

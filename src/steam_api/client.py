@@ -1,11 +1,24 @@
+from time import sleep
+from typing import Iterator
+
 import requests
+from requests import ConnectTimeout
 
 from src.steam_api.cache import cache
 from src.steam_api.config import config
-from src.steam_api.schemas import OwnedGamesResponse, AppInfoOuter, App
+from src.steam_api.schemas import OwnedGamesResponse, AppInfoOuter, App, Review, ReviewsResponse
+from src.steam_api.utils import retry
+
+CONN_TIMEOUT = 5
+READ_TIMEOUT = 10
+BACKOFF_TIMEOUT = 3
 
 
 class AppNotFound(Exception):
+    pass
+
+
+class ReviewCollision(Exception):
     pass
 
 
@@ -31,6 +44,44 @@ class Client:
         )
         r.raise_for_status()
         return OwnedGamesResponse.parse_obj(r.json()['response'])
+
+    def get_total_reviews(self, app_id: int) -> int:
+        r = self._get_reviews(app_id)
+        return r.query_summary.total_reviews
+
+    @cache.cache_generator(key='reviews', model=Review)
+    def get_reviews(self, app_id: int) -> Iterator[Review]:
+        ids = set()
+        cursor = '*'
+        while True:
+            batch = self._get_reviews(app_id, cursor=cursor)
+            if not batch.success:
+                break
+            if not batch.reviews:
+                break
+            for review in batch.reviews:
+                if review.id in ids:
+                    raise ReviewCollision((review.id, ids))
+                ids.add(review.id)
+                yield review
+            cursor = batch.cursor
+
+    @staticmethod
+    @retry(ConnectTimeout, n=30, backoff_time=BACKOFF_TIMEOUT)
+    def _get_reviews(app_id: int, cursor: str = '*') -> ReviewsResponse:
+        r = requests.get(
+            f'http://store.steampowered.com/appreviews/{app_id}',
+            params={
+                'key': config.STEAM_API_KEY,
+                'json': 1,
+                'cursor': cursor,
+                'num_per_page': 20,
+                'filter_offtopic_activity': 0,
+            },
+            timeout=(CONN_TIMEOUT, READ_TIMEOUT),
+        )
+        r.raise_for_status()
+        return ReviewsResponse.parse_obj(r.json())
 
 
 client = Client(config.STEAM_API_KEY)
