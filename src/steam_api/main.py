@@ -12,7 +12,7 @@ def main():
         total_reviews = client.get_total_reviews(game.app_id)
         print(app_info.id, app_info.name or 'UNKNOWN', total_reviews)
 
-        if client.get_reviews.cache._check(game.app_id):
+        if game.app_id in client.get_reviews.cache.cache:
             continue
         for i, r in enumerate(client.get_reviews(game.app_id)):
             if not (i % 10):

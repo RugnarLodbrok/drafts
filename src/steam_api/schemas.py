@@ -126,6 +126,8 @@ class Review(BaseModel):
     written_during_early_access: bool
     hidden_in_steam_china: bool
     steam_china_location: str
+    developer_response: str | None = None
+    timestamp_dev_responded: int | None = None
 
 
 class ReviewsResponse(BaseModel):

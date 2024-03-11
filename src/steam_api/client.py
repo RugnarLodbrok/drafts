@@ -5,7 +5,7 @@ from requests import ConnectTimeout
 
 from src.steam_api.cache import cache
 from src.steam_api.config import config
-from src.steam_api.schemas import OwnedGamesResponse, AppInfoOuter, App, Review, ReviewsResponse
+from src.steam_api.schemas import OwnedGamesResponse, AppInfoOuter, App, Review, ReviewsResponse, ReviewsSummary
 from src.steam_api.utils import retry
 
 CONN_TIMEOUT = 5
@@ -28,7 +28,7 @@ class Client:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    @cache.cache('get_app_info', App)
+    @cache('get_app_info', App)
     def get_app_info(self, app_id: int) -> App | None:
         r = requests.get(f'{self.STORE_API}/api/appdetails?appids={app_id}')
         r.raise_for_status()
@@ -37,6 +37,7 @@ class Client:
         outer = AppInfoOuter.parse_obj(raw[str(app_id)])
         return outer.data
 
+    @cache('player_owned_games', OwnedGamesResponse)
     def get_player_owned_games(self, steam_id: int) -> OwnedGamesResponse:
         r = requests.get(
             url=f'{self.STEAM_API}/IPlayerService/GetOwnedGames/v0001/'
@@ -48,10 +49,13 @@ class Client:
         return OwnedGamesResponse.parse_obj(r.json()['response'])
 
     def get_total_reviews(self, app_id: int) -> int:
-        r = self._get_reviews(app_id)
-        return r.query_summary.total_reviews
+        return self.get_review_summary(app_id).total_reviews
 
-    @cache.cache_generator(key='reviews', model=Review)
+    @cache(key='review_summary', model=ReviewsSummary)
+    def get_review_summary(self, app_id: int) -> ReviewsSummary:
+        return self._get_reviews(app_id).query_summary
+
+    @cache(key='reviews', model=Review)
     def get_reviews(self, app_id: int) -> Iterator[Review]:
         ids = set()
         cursor = '*'

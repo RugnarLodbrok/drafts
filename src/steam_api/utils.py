@@ -1,20 +1,24 @@
 from time import sleep
-from typing import Type
+from typing import Type, Callable, ParamSpec, TypeVar
+
+T = TypeVar('T')
+P = ParamSpec('P')
+F = Callable[P, T]
 
 
-def retry(exc_type: Type[Exception], n: int = 3, backoff_time: int = 0):
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            ex = exc_type
+def retry(exc_type: Type[Exception], n: int = 3, backoff_time: int = 0) -> Callable[[F], F]:
+    def decorator(f: F) -> F:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            last_exception = exc_type
             for _ in range(n):
                 try:
                     return f(*args, **kwargs)
                 except exc_type as e:
-                    ex = e
+                    last_exception = e
                     print(f'retry {exc_type}... {backoff_time} sec')
                     sleep(backoff_time)
             else:
-                raise ex
+                raise last_exception
 
         return wrapper
 
