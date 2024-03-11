@@ -82,7 +82,7 @@ class CacheDecorator:
                     self.cache[key] = self._model_dump(result)
                     return result
         else:
-            def wrapper(slf, key: str) -> T | None:
+            def wrapper(slf, key: str) -> Iterator[T]:
                 if key in self.cache:
                     for item in self.cache.iter(key):
                         yield self.model.parse_obj(item)
@@ -98,10 +98,10 @@ class CacheDecorator:
 
 class Cache:
     def __init__(self, path: Path):
-        path.mkdir(exist_ok=True)
         self.path = path
 
     def __call__(self, key: str, model: BaseModel) -> CacheDecorator:
+        self.path.mkdir(exist_ok=True)
         return CacheDecorator(self.path / key, model)
 
 

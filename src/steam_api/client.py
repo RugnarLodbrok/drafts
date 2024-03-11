@@ -1,11 +1,12 @@
-from typing import Iterator
+from typing import Iterator, cast
 
 import requests
 from requests import ConnectTimeout
 
 from src.steam_api.cache import cache
 from src.steam_api.config import config
-from src.steam_api.schemas import OwnedGamesResponse, AppInfoOuter, App, Review, ReviewsResponse, ReviewsSummary
+from src.steam_api.schemas import OwnedGamesResponse, App, Review, ReviewsResponse, ReviewsSummary, \
+    AppInfoResponse
 from src.steam_api.utils import retry
 
 CONN_TIMEOUT = 5
@@ -21,6 +22,10 @@ class ReviewCollision(Exception):
     pass
 
 
+class NotFound(Exception):
+    pass
+
+
 class Client:
     STORE_API = 'https://store.steampowered.com'
     STEAM_API = 'https://api.steampowered.com'
@@ -29,21 +34,27 @@ class Client:
         self.api_key = api_key
 
     @cache('get_app_info', App)
-    def get_app_info(self, app_id: int) -> App | None:
+    def get_app_info(self, app_id: int) -> App:
         r = requests.get(f'{self.STORE_API}/api/appdetails?appids={app_id}')
         r.raise_for_status()
-        raw = r.json()
-        assert set(raw) == {str(app_id)}
-        outer = AppInfoOuter.parse_obj(raw[str(app_id)])
-        return outer.data
+        raw = AppInfoResponse.parse_raw(r.text)
+        assert set(raw.__root__) == {str(app_id)}
+        outer = raw.__root__[str(app_id)]
+        if not outer.success:
+            raise NotFound(f'app {app_id} retrieve failed')
+        if not outer.data:
+            raise NotFound(f'app {app_id} empty data')
+        return cast(App, outer.data)
 
     @cache('player_owned_games', OwnedGamesResponse)
     def get_player_owned_games(self, steam_id: int) -> OwnedGamesResponse:
         r = requests.get(
-            url=f'{self.STEAM_API}/IPlayerService/GetOwnedGames/v0001/'
-                f'?key={self.api_key}'
-                f'&steamid={steam_id}'
-                f'&format=json'
+            url=f'{self.STEAM_API}/IPlayerService/GetOwnedGames/v0001/',
+            params={
+                'key': self.api_key,
+                'steamid': steam_id,
+                'format': 'json',
+            },
         )
         r.raise_for_status()
         return OwnedGamesResponse.parse_obj(r.json()['response'])

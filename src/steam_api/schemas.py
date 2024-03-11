@@ -19,7 +19,7 @@ class OwnedGamesResponse(BaseModel):
 
 
 class AppPriceOverview(BaseModel):
-    currency: Literal['RUB', 'KRW', 'CAD', 'UAH', 'SGD', 'EUR', 'BRL', 'CNY', 'USD']
+    currency: Literal['RUB', 'KRW', 'CAD', 'UAH', 'SGD', 'EUR', 'BRL', 'CNY', 'USD', 'PLN', 'GBP']
     initial: int
     final: int
     discount_percent: int
@@ -113,7 +113,7 @@ class Review(BaseModel):
     id: int = Field(..., alias='recommendationid')
     author: ReviewAuthor
     language: str
-    review: str
+    review: str | None = None
     timestamp_created: int
     timestamp_updated: int
     voted_up: bool
@@ -140,3 +140,7 @@ class ReviewsResponse(BaseModel):
 class AppInfoOuter(BaseModel):
     success: bool
     data: App | None = None
+
+
+class AppInfoResponse(BaseModel):
+    __root__: dict[str, AppInfoOuter]
