@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class OwnedGame(BaseModel):
-    app_id: int = Field(..., alias='appid')
+    id: int = Field(..., alias='appid')
     playtime_forever: int
     playtime_windows_forever: int
     playtime_mac_forever: int
