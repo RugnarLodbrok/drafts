@@ -54,9 +54,14 @@ def main():
     # games = sorted(games, key=lambda game: game.total_reviews)
     # for g in games:
     #     print(g.name, g.total_reviews)
-    r: Review
-    for r in client.get_reviews(643960):
-        print(r.id)
+
+    # r: Review
+    # for r in client.get_reviews(643960):
+    #     print(r.id)
+
+    all_apps = client.get_all_apps()
+    print(len(all_apps))
+
 
 if __name__ == '__main__':
     main()

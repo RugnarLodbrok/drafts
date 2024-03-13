@@ -1,9 +1,11 @@
 import abc
 import inspect
+import json
 from contextlib import contextmanager
+from functools import cached_property
 from inspect import isgeneratorfunction as is_generator
 from pathlib import Path
-from typing import Callable, TypeVar, ParamSpec, Iterator, Iterable, Type
+from typing import Callable, TypeVar, ParamSpec, Iterator
 
 import yaml
 from py_tools.seq import identity
@@ -19,6 +21,11 @@ AnyJson = list[_AnyJsonItem] | _AnyJsonItem
 
 
 class SerializerBase:
+    @property
+    @abc.abstractmethod
+    def EXT(self) -> str:
+        ...
+
     @abc.abstractmethod
     def dump(self, path: Path, data: AnyJson) -> None:
         ...
@@ -34,7 +41,21 @@ class SerializerBase:
         raise NotImplementedError
 
 
+class SerializerJson(SerializerBase):
+    EXT = 'json'
+
+    def dump(self, path: Path, data: AnyJson) -> None:
+        with open(path, 'wt') as f:
+            json.dump(data, f, ensure_ascii=False)
+
+    def load(self, path: Path) -> AnyJson:
+        with open(path, 'rt') as f:
+            return json.load(f)
+
+
 class SerializerYaml(SerializerBase):
+    EXT = 'yml'
+
     def dump(self, path: Path, data: AnyJson) -> None:
         with open(path, 'wt') as f:
             yaml.dump(data, stream=f, allow_unicode=True)
@@ -81,17 +102,21 @@ class CacheFiles:
     def no_args_mode(self) -> bool:
         return self._no_args_mode
 
+    @cached_property
+    def ext(self):
+        return self._serializer.EXT
+
     @no_args_mode.setter
     def no_args_mode(self, value: bool) -> None:
         if value is False:
-            self._path.mkdir(exist_ok=True)
+            self._path.mkdir(exist_ok=True, parents=True)
         self._no_args_mode = value
 
     def _key_file(self, key: str) -> Path:
         if self._no_args_mode is False:
-            return self._path / f'{key}.yml'
+            return self._path / f'{key}.{self.ext}'
         elif self._no_args_mode is True:
-            return Path(f'{self._path}.yml')
+            return Path(f'{self._path}.{self.ext}')
         raise RuntimeError('mode is not set')
 
     def __contains__(self, key: str) -> bool:
@@ -111,8 +136,8 @@ class CacheFiles:
 
 
 class CacheDecorator:
-    def __init__(self, path: Path, model: BaseModel | None):
-        self.cache = CacheFiles(path)
+    def __init__(self, cache_backend: CacheFiles, model: BaseModel | None):
+        self.cache_backend = cache_backend
         self.model = model
 
     @staticmethod
@@ -130,36 +155,36 @@ class CacheDecorator:
         return len(args)
 
     def __call__(self, func: F) -> F:
-        self.cache.no_args_mode = self.get_arg_count(func) == 0
+        self.cache_backend.no_args_mode = self.get_arg_count(func) == 0
         if self.model:
-            _dump = self._model_dump
+            _dump = self._model_dump  # todo: move to external middleware
             _load = self._model_load
         else:
             _dump = identity
             _load = identity
         if not is_generator(func):
             def hit(key: str) -> T | None:
-                result = self.cache[key]
+                result = self.cache_backend[key]
                 return _load(result)
 
             def miss(key: str, result: T | None) -> T | None:
-                self.cache[key] = _dump(result)
+                self.cache_backend[key] = _dump(result)
                 return result
 
         else:
             def hit(key: str) -> Iterator[T]:
-                for item in self.cache.iter(key):
+                for item in self.cache_backend.iter(key):
                     yield _load(item)
 
             def miss(key: str, result: Iterator[T]) -> Iterator[T]:
-                with self.cache.iter_write(key) as feed:
+                with self.cache_backend.iter_write(key) as feed:
                     for item in result:
                         feed(_dump(item))
                         yield item
 
         def wrapper(slf, *args) -> T | None:
             key = '_'.join(str(arg) for arg in args)
-            if key in self.cache:
+            if key in self.cache_backend:
                 return hit(key)
             return miss(key, func(slf, *args))
 
@@ -171,9 +196,13 @@ class Cache:
     def __init__(self, path: Path):
         self.path = path
 
-    def __call__(self, key: str, model: BaseModel | None = None) -> CacheDecorator:
-        self.path.mkdir(exist_ok=True)
-        return CacheDecorator(self.path / key, model)
+    def __call__(
+            self,
+            key: str, model: BaseModel | None = None,
+            serializer=SerializerJson(),
+    ) -> CacheDecorator:
+        cache_backend = CacheFiles(path=self.path / key, serializer=serializer)
+        return CacheDecorator(cache_backend, model)
 
 
 cache = Cache(Path(__file__).parent / 'cache')

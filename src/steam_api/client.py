@@ -3,7 +3,7 @@ from typing import Iterator, cast
 import requests
 from requests import ConnectTimeout
 
-from src.steam_api.cache import cache
+from src.steam_api.cache import cache, SerializerJson
 from src.steam_api.common import AnyDict
 from src.steam_api.config import config
 from src.steam_api.schemas import OwnedGamesResponse, App, Review, ReviewsResponse, ReviewsSummary, \
@@ -105,7 +105,7 @@ class Client:
         assert result.success
         return result
 
-    @cache(key='all_apps')
+    @cache(key='all_apps', serializer=SerializerJson())
     def get_all_apps(self) -> list[AnyDict]:
         # todo: cache
         r = requests.get(f'{self.STEAM_API}/ISteamApps/GetAppList/v2/')
