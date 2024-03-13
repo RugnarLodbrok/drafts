@@ -4,6 +4,7 @@ import requests
 from requests import ConnectTimeout
 
 from src.steam_api.cache import cache
+from src.steam_api.common import AnyDict
 from src.steam_api.config import config
 from src.steam_api.schemas import OwnedGamesResponse, App, Review, ReviewsResponse, ReviewsSummary, \
     AppInfoResponse
@@ -70,7 +71,7 @@ class Client:
     def get_reviews(self, app_id: int) -> Iterator[Review]:
         ids = set()
         cursor = '*'
-        while True:
+        while cursor:
             batch = self._get_reviews(app_id, cursor=cursor)
             if not batch.reviews:
                 break
@@ -80,6 +81,8 @@ class Client:
                 ids.add(review.id)
                 yield review
             cursor = batch.cursor
+        else:
+            print('MISSING CURSOR')
 
     @retry(ConnectTimeout, n=30, backoff_time=BACKOFF_TIMEOUT)
     def _get_reviews(self, app_id: int, cursor: str = '*') -> ReviewsResponse:
@@ -101,6 +104,13 @@ class Client:
         result = ReviewsResponse.parse_obj(r.json())
         assert result.success
         return result
+
+    @cache(key='all_apps')
+    def get_all_apps(self) -> list[AnyDict]:
+        # todo: cache
+        r = requests.get(f'{self.STEAM_API}/ISteamApps/GetAppList/v2/')
+        r.raise_for_status()
+        return r.json()['applist']['apps']
 
 
 client = Client(config.STEAM_API_KEY)

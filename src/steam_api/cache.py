@@ -1,15 +1,18 @@
+import inspect
 from contextlib import contextmanager
 from inspect import isgeneratorfunction as is_generator
 from pathlib import Path
-from typing import Callable, TypeVar, Any, ParamSpec, Iterator
+from typing import Callable, TypeVar, ParamSpec, Iterator
 
 import yaml
+from py_tools.seq import identity
 from pydantic import BaseModel
+
+from src.steam_api.common import AnyDict
 
 T = TypeVar('T', bound=BaseModel)
 P = ParamSpec('P')
 F = Callable[P, T | None]
-AnyDict = dict[str, Any]
 _AnyJsonItem = AnyDict | bool | None
 AnyJson = list[_AnyJsonItem] | _AnyJsonItem
 
@@ -59,38 +62,56 @@ class CacheFiles:
 
 
 class CacheDecorator:
-    def __init__(self, path: Path, model: BaseModel):
+    def __init__(self, path: Path, model: BaseModel | None):
         path.mkdir(exist_ok=True)
         self.cache = CacheFiles(path)
         self.model = model
 
     @staticmethod
-    def _model_dump(data: BaseModel) -> AnyDict | None:
+    def _model_dump(data: BaseModel) -> AnyJson:
         return data and data.dict(by_alias=True)
 
-    def _model_load(self, data: AnyDict | None) -> BaseModel | None:
+    def _model_load(self, data: AnyJson) -> BaseModel | None:
         return data and self.model.parse_obj(data)
 
+    def get_arg_count(self, func: F) -> int:
+        spec = inspect.getfullargspec(func)
+        raise NotImplementedError
+
     def __call__(self, func: F) -> F:
-        if not is_generator(func):
-            def wrapper(slf, key: str) -> T | None:
-                if key in self.cache:
-                    result = self.cache[key]
-                    return self._model_load(result)
-                else:
-                    result = func(slf, key)
-                    self.cache[key] = self._model_dump(result)
-                    return result
+        if self.model:
+            _dump = self._model_dump
+            _load = self._model_load
         else:
-            def wrapper(slf, key: str) -> Iterator[T]:
-                if key in self.cache:
-                    for item in self.cache.iter(key):
-                        yield self.model.parse_obj(item)
-                else:
-                    with self.cache.iter_write(key) as feed:
-                        for item in func(slf, key):
-                            feed(self._model_dump(item))
-                            yield item
+            _dump = identity
+            _load = identity
+        if not is_generator(func):
+            def hit(slf, key: str) -> T | None:
+                result = self.cache[key]
+                return _load(result)
+
+            def miss(slf, key: str) -> T | None:
+                result = func(slf, key)
+                self.cache[key] = _dump(result)
+                return result
+
+        else:
+            def hit(slf, key: str) -> Iterator[T]:
+                for item in self.cache.iter(key):
+                    yield _load(item)
+
+            def miss(slf, key: str) -> Iterator[T]:
+                with self.cache.iter_write(key) as feed:
+                    for item in func(slf, key):
+                        feed(_dump(item))
+                        yield item
+
+        # self.get_arg_count(func)
+
+        def wrapper(slf, key: str) -> T | None:
+            if key in self.cache:
+                return hit(slf, key)
+            return miss(slf, key)
 
         wrapper.cache = self
         return wrapper
@@ -100,7 +121,7 @@ class Cache:
     def __init__(self, path: Path):
         self.path = path
 
-    def __call__(self, key: str, model: BaseModel) -> CacheDecorator:
+    def __call__(self, key: str, model: BaseModel | None = None) -> CacheDecorator:
         self.path.mkdir(exist_ok=True)
         return CacheDecorator(self.path / key, model)
 

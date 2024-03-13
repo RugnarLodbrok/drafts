@@ -19,7 +19,7 @@ class OwnedGamesResponse(BaseModel):
 
 
 class AppPriceOverview(BaseModel):
-    currency: Literal['RUB', 'KRW', 'CAD', 'UAH', 'SGD', 'EUR', 'BRL', 'CNY', 'USD', 'PLN', 'GBP']
+    currency: Literal['RUB', 'KRW', 'CAD', 'UAH', 'SGD', 'EUR', 'BRL', 'CNY', 'USD', 'PLN', 'GBP', 'HKD']
     initial: int
     final: int
     discount_percent: int
@@ -134,7 +134,7 @@ class ReviewsResponse(BaseModel):
     success: bool
     query_summary: ReviewsSummary
     reviews: list[Review]
-    cursor: str
+    cursor: str | None = None
 
 
 class AppInfoOuter(BaseModel):
